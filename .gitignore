@@ -1,1 +1,3 @@
 *.pyc
+
+src/bot_globals.py
