@@ -11,9 +11,11 @@ bot.
 """
 
 import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters
+import telegram
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 from bot_globals import *
+import vn_crawler as crawler
 
 # Enable logging
 logging.basicConfig(
@@ -28,6 +30,15 @@ logger = logging.getLogger(__name__)
 def start(bot, update):
     bot.sendMessage(update.message.chat_id, text='Hi!')
 
+def searchNovel(bot, update, args):
+    name = ' '.join(args)
+    novels = crawler.searchNovel(name)
+    msg = "*Novels found for:* " + name + "\n"
+    for novel in novels:
+        print novel[0]
+        msg += u"[{}]({}): Popularity: {}".format(novel[0], novel[2], novel[1])
+        msg += '\n'
+    bot.sendMessage(update.message.chat_id, text=msg, parse_mode=telegram.ParseMode.MARKDOWN)
 
 def help(bot, update):
     bot.sendMessage(update.message.chat_id, text='Help!')
@@ -39,7 +50,6 @@ def echo(bot, update):
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
-
 
 def main():
     print 'start'
@@ -54,10 +64,12 @@ def main():
     # on different commands - answer in Telegram
     dp.addHandler(CommandHandler("start", start))
     dp.addHandler(CommandHandler("help", help))
+    dp.addHandler(CommandHandler("searchNovel", searchNovel, pass_args=True))
+    dp.addHandler(CommandHandler("search", searchNovel, pass_args=True))
     print 'add handlers'
 
     # on noncommand i.e message - echo the message on Telegram
-    dp.addHandler(MessageHandler([filters.TEXT], echo))
+    dp.addHandler(MessageHandler([Filters.text], echo))
     print 'message handler'
 
     # log all errors
